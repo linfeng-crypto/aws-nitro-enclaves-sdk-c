@@ -2681,25 +2681,28 @@ int aws_kms_encrypt_blocking(
 
     request_structure = aws_kms_encrypt_request_new(client->allocator);
     if (request_structure == NULL) {
-        return AWS_OP_ERR;
+        return 1;
     }
 
     aws_byte_buf_init_copy(&request_structure->plaintext, client->allocator, plaintext);
 
     request = aws_kms_encrypt_request_to_json(request_structure);
     if (request == NULL) {
+        rc = 2;
         goto err_clean;
     }
 
     rc = s_aws_nitro_enclaves_kms_client_call_blocking(client, kms_target_encrypt, request, &response);
     if (rc != 200) {
         fprintf(stderr, "Got non-200 answer from KMS: %d\n", rc);
+        rc = 3;
         goto err_clean;
     }
 
     response_structure = aws_kms_encrypt_response_from_json(client->allocator, response);
     if (response_structure == NULL) {
         fprintf(stderr, "Could not read response from KMS: %d\n", rc);
+        rc = 4;
         goto err_clean;
     }
 
@@ -2716,7 +2719,7 @@ err_clean:
     aws_kms_encrypt_response_destroy(response_structure);
     aws_string_destroy(request);
     aws_string_destroy(response);
-    return AWS_OP_ERR;
+    return rc;
 }
 
 int aws_kms_generate_data_key_blocking(
