@@ -2534,7 +2534,7 @@ static int s_aws_nitro_enclaves_kms_client_call_blocking(
         target,
         aws_byte_cursor_from_string(request));
     if (rest_response == NULL) {
-        return AWS_OP_ERR;
+        return AWS_OP_ERR + 1000;
     }
 
     struct aws_input_stream *request_stream = aws_http_message_get_body_stream(rest_response->response);
@@ -2551,7 +2551,7 @@ static int s_aws_nitro_enclaves_kms_client_call_blocking(
     aws_http_message_get_response_status(rest_response->response, &status);
     aws_nitro_enclaves_rest_response_destroy(rest_response);
 
-    return status;
+    return status + 2000;
 }
 
 static int s_decrypt_ciphertext_for_recipient(
@@ -2695,7 +2695,6 @@ int aws_kms_encrypt_blocking(
     rc = s_aws_nitro_enclaves_kms_client_call_blocking(client, kms_target_encrypt, request, &response);
     if (rc != 200) {
         fprintf(stderr, "Got non-200 answer from KMS: %d\n", rc);
-        rc = 3;
         goto err_clean;
     }
 
